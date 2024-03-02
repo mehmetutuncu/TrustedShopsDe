@@ -13,14 +13,18 @@ port = env.int('port', default=5432)
 db = PostgresqlDatabase(database=database, user=user, password=password, host=host, port=port)
 
 
-class TrustedShopsDe(Model):
+class TableTrustedShopsDe(Model):
+    company_name = TextField()
+    organization_name = TextField()
+    address = TextField()
     phone = TextField()
     website = TextField()
     email = TextField(unique=True, null=False)
-    company_name = TextField()
     company_url = TextField()
     rating_count = CharField()
     rating_value = CharField()
+    main_category = CharField()
+    sub_category = CharField()
 
     class Meta:
         database = db
