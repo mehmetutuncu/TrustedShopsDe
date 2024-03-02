@@ -69,16 +69,17 @@ class TrustedShopsDe(RequestBeautifulSoupMixin):
             json_data = json.loads(application_data.text)
             profile = json_data.get('props', {}).get('pageProps', {}).get('profile')
             company_name = profile.get('name')
-            organization_name = profile.get('organization', {}).get('name', '')
-            address = " ".join(profile.get('address', {}).values())
-            phone = profile.get('contactData', {}).get('phone')
-            website = profile.get('url', '')
+            organization_name = profile.get('organization', {}).get('name', '') or ''
+            address = " ".join(profile.get('address', {}).values()) or ''
+            phone = profile.get('contactData', {}).get('phone', '') or ''
+            website = profile.get('url', '') or ''
             email = profile.get('contactData', {}).get('email')
-            rate_count = str(profile.get('reviewStatistic', {}).get('allTimeReviewCount', '0'))
-            rate_value = str(profile.get('reviewStatistic', {}).get('grade', '0'))
+            rate_count = str(profile.get('reviewStatistic', {}).get('allTimeReviewCount', '0')) or '0'
+            rate_value = str(profile.get('reviewStatistic', {}).get('grade', '0')) or '0'
 
-            if not email or TableMailDB.select().where(TableMailDB.email == email).exists():
-                logging.warning(f"{email} exist passing")
+            if not email or TableMailDB.select().where(
+                    TableMailDB.email == email).exists() or TableTrustedShopsDe.select(
+                    TableTrustedShopsDe.email == email).exists():
                 return
             company_data = dict(company_name=company_name, organization_name=organization_name, address=address,
                                 phone=phone, website=website, email=email, rating_count=rate_count,
