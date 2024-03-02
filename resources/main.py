@@ -16,7 +16,13 @@ class RequestBeautifulSoupMixin:
         if retry > 3:
             logging.error(f"retry count {retry} for {url}. passing...")
             return None
-        response = requests.get(url, **kwargs)
+        try:
+            response = requests.get(url, **kwargs)
+        except Exception as e:
+            logging.error(f"{e}\n"
+                          f"Sleep 60 seconds.")
+            sleep(60)
+            return self.get(url, retry=retry + 1, *args, **kwargs)
         if response.status_code == 200 and response.ok:
             return response
         return self.get(url, retry=retry + 1, *args, **kwargs)
@@ -77,9 +83,11 @@ class TrustedShopsDe(RequestBeautifulSoupMixin):
             rate_count = str(profile.get('reviewStatistic', {}).get('allTimeReviewCount', '0')) or '0'
             rate_value = str(profile.get('reviewStatistic', {}).get('grade', '0')) or '0'
 
-            if not email or TableMailDB.select().where(
-                    TableMailDB.email == email).exists() or TableTrustedShopsDe.select(
-                    TableTrustedShopsDe.email == email).exists():
+            all_db_exists = TableMailDB.select().where(
+                TableMailDB.email == email).exists()
+            new_db_exists = TableTrustedShopsDe.select().where(TableTrustedShopsDe.email == email).exists()
+            if not email or all_db_exists or new_db_exists:
+                logging.error(f"Email: {email} - all db : {all_db_exists} - new db : {new_db_exists}")
                 return
             company_data = dict(company_name=company_name, organization_name=organization_name, address=address,
                                 phone=phone, website=website, email=email, rating_count=rate_count,
@@ -102,7 +110,6 @@ class TrustedShopsDe(RequestBeautifulSoupMixin):
 
     def extract_sub_category(self, main_category_name, sub_category_name, sub_category_url, log_text, page=1):
         while True:
-
             params = {
                 "page": page
             }
