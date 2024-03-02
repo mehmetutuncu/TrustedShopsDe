@@ -50,11 +50,13 @@ class TrustedShopsDe(RequestBeautifulSoupMixin):
             categories.append(dict(name=category_name, url=url))
         return categories
 
-    def save_company(self,**kwargs):
+    @staticmethod
+    def save_company(**kwargs):
         try:
             instance = TableTrustedShopsDe(**kwargs)
             instance.save()
-        except IntegrityError:
+        except IntegrityError as e:
+            logging.error(e)
             return
 
     def extract_company(self, company_url, main_category_name, sub_category_name):
@@ -79,8 +81,10 @@ class TrustedShopsDe(RequestBeautifulSoupMixin):
                 logging.warning(f"{email} exist passing")
                 return
             company_data = dict(company_name=company_name, organization_name=organization_name, address=address,
-                                phone=phone, website=website, email=email, rate_count=rate_count, rate_value=rate_value,
-                                main_category=main_category_name, sub_category=sub_category_name)
+                                phone=phone, website=website, email=email, rating_count=rate_count,
+                                rating_value=rate_value,
+                                main_category=main_category_name, sub_category=sub_category_name,
+                                company_url=company_url)
             self.save_company(**company_data)
 
     def extract_companies(self, company_items, main_category_name, sub_category_name):
